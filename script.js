@@ -19,6 +19,15 @@ const completeBanner = document.getElementById("completeBanner");
 const taskFinish = document.getElementById("taskFinish");
 const taskMoves = document.getElementById("taskMoves");
 const taskReplay = document.getElementById("taskReplay");
+const gameTip = document.getElementById("gameTip");
+const dragBoard = document.getElementById("dragBoard");
+const crosswordBoard = document.getElementById("crosswordBoard");
+const tabButtons = document.querySelectorAll("[data-game-tab]");
+const gameViews = {
+  slide: document.getElementById("slideGame"),
+  drag: document.getElementById("dragGame"),
+  crossword: document.getElementById("crosswordGame")
+};
 
 let size = Number(levelSelect.value);
 let tiles = [];
@@ -28,10 +37,18 @@ let completedRounds = 0;
 let solved = false;
 let hintActive = false;
 let celebrationParticles = [];
+let currentGame = "slide";
+let dragTiles = [];
+let selectedDragIndex = null;
+let completedGames = new Set();
 
 const image = new Image();
 image.src = IMAGE_SRC;
-image.addEventListener("load", startGame);
+image.addEventListener("load", () => {
+  startGame();
+  startDragGame();
+  buildCrossword();
+});
 
 passwordForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -56,8 +73,19 @@ levelSelect.addEventListener("change", () => {
 resetButton.addEventListener("click", startGame);
 hintButton.addEventListener("click", showHint);
 canvas.addEventListener("click", handleCanvasClick);
+tabButtons.forEach((button) => {
+  button.addEventListener("click", () => switchGame(button.dataset.gameTab));
+});
 
 function startGame() {
+  if (currentGame === "drag") {
+    startDragGame();
+    return;
+  }
+  if (currentGame === "crossword") {
+    buildCrossword();
+    return;
+  }
   tiles = Array.from({ length: size * size }, (_, index) => index);
   blankIndex = tiles.length - 1;
   moves = 0;
@@ -69,6 +97,27 @@ function startGame() {
   taskMoves.classList.remove("done");
   shuffleByMoves(140 + size * 40);
   draw();
+}
+
+function switchGame(gameName) {
+  currentGame = gameName;
+  tabButtons.forEach((button) => button.classList.toggle("active", button.dataset.gameTab === gameName));
+  Object.entries(gameViews).forEach(([name, view]) => view.classList.toggle("active", name === gameName));
+  completeBanner.classList.add("is-hidden");
+  levelSelect.disabled = gameName !== "slide";
+  hintButton.disabled = gameName === "crossword";
+  resetButton.title = gameName === "crossword" ? "Recomecar palavras" : "Embaralhar de novo";
+  if (gameName === "slide") {
+    gameTip.textContent = "Dica: clique em uma peca ao lado do espaco vazio para mover.";
+    draw();
+  }
+  if (gameName === "drag") {
+    gameTip.textContent = "Dica: clique em duas pecas para trocar de lugar.";
+    renderDragBoard();
+  }
+  if (gameName === "crossword") {
+    gameTip.textContent = "Dica: preencha as palavras das pistas. As letras ficam em maiusculo.";
+  }
 }
 
 function shuffleByMoves(count) {
@@ -198,14 +247,8 @@ function showHint() {
 
 function finishRound() {
   solved = true;
-  completedRounds += 1;
-  taskFinish.classList.add("done");
-  if (moves <= 80) taskMoves.classList.add("done");
-  if (completedRounds >= 2) taskReplay.classList.add("done");
-  completeBanner.classList.remove("is-hidden");
   drawFullImage();
-  playApplause();
-  launchCelebration();
+  completeGame("slide");
 }
 
 function drawFullImage() {
@@ -230,6 +273,133 @@ function getNeighborIndexes(index) {
 
 function swap(first, second) {
   [tiles[first], tiles[second]] = [tiles[second], tiles[first]];
+}
+
+function startDragGame() {
+  dragTiles = Array.from({ length: 9 }, (_, index) => index);
+  selectedDragIndex = null;
+  shuffleArray(dragTiles);
+  if (dragTiles.every((value, index) => value === index)) shuffleArray(dragTiles);
+  moves = 0;
+  movesEl.textContent = "0";
+  completeBanner.classList.add("is-hidden");
+  renderDragBoard();
+}
+
+function renderDragBoard() {
+  dragBoard.innerHTML = "";
+  dragTiles.forEach((tileValue, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "drag-tile";
+    button.draggable = true;
+    button.style.backgroundPosition = `${(tileValue % 3) * 50}% ${Math.floor(tileValue / 3) * 50}%`;
+    button.setAttribute("aria-label", `Peca ${index + 1}`);
+    if (selectedDragIndex === index) button.classList.add("selected");
+    button.addEventListener("click", () => selectOrSwapDrag(index));
+    button.addEventListener("dragstart", (event) => event.dataTransfer.setData("text/plain", String(index)));
+    button.addEventListener("dragover", (event) => event.preventDefault());
+    button.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const fromIndex = Number(event.dataTransfer.getData("text/plain"));
+      swapDragTiles(fromIndex, index);
+    });
+    dragBoard.appendChild(button);
+  });
+}
+
+function selectOrSwapDrag(index) {
+  if (selectedDragIndex === null) {
+    selectedDragIndex = index;
+    renderDragBoard();
+    return;
+  }
+  swapDragTiles(selectedDragIndex, index);
+}
+
+function swapDragTiles(first, second) {
+  if (first === second) {
+    selectedDragIndex = null;
+    renderDragBoard();
+    return;
+  }
+  [dragTiles[first], dragTiles[second]] = [dragTiles[second], dragTiles[first]];
+  selectedDragIndex = null;
+  moves += 1;
+  movesEl.textContent = String(moves);
+  renderDragBoard();
+  if (dragTiles.every((value, index) => value === index)) completeGame("drag");
+}
+
+function buildCrossword() {
+  const grid = Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => null));
+  const words = [
+    { number: "1", word: "ANA", row: 1, col: 1, dir: "across" },
+    { number: "2", word: "ESTUDAR", row: 3, col: 1, dir: "across" },
+    { number: "3", word: "PAPAI", row: 1, col: 6, dir: "down" },
+    { number: "4", word: "FOGOS", row: 6, col: 4, dir: "across" }
+  ];
+
+  words.forEach(({ number, word, row, col, dir }) => {
+    [...word].forEach((letter, offset) => {
+      const cellRow = row + (dir === "down" ? offset : 0);
+      const cellCol = col + (dir === "across" ? offset : 0);
+      grid[cellRow][cellCol] = grid[cellRow][cellCol] || { letter, number: "" };
+      grid[cellRow][cellCol].letter = letter;
+      if (offset === 0) grid[cellRow][cellCol].number = number;
+    });
+  });
+
+  crosswordBoard.innerHTML = "";
+  grid.flat().forEach((cell) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = cell ? "cross-cell" : "cross-cell block";
+    if (cell) {
+      if (cell.number) {
+        const number = document.createElement("span");
+        number.className = "cross-number";
+        number.textContent = cell.number;
+        wrapper.appendChild(number);
+      }
+      const input = document.createElement("input");
+      input.maxLength = 1;
+      input.dataset.answer = cell.letter;
+      input.addEventListener("input", () => {
+        input.value = input.value.toUpperCase().replace(/[^A-Z]/g, "");
+        checkCrossword();
+      });
+      wrapper.appendChild(input);
+    }
+    crosswordBoard.appendChild(wrapper);
+  });
+  moves = 0;
+  movesEl.textContent = "0";
+  completeBanner.classList.add("is-hidden");
+}
+
+function checkCrossword() {
+  const inputs = [...crosswordBoard.querySelectorAll("input")];
+  const done = inputs.every((input) => input.value === input.dataset.answer);
+  movesEl.textContent = String(inputs.filter((input) => input.value).length);
+  if (done) completeGame("crossword");
+}
+
+function completeGame(gameName) {
+  completedGames.add(gameName);
+  completedRounds = completedGames.size;
+  taskFinish.classList.add("done");
+  if (moves <= 80) taskMoves.classList.add("done");
+  if (completedRounds >= 2) taskReplay.classList.add("done");
+  completeBanner.classList.remove("is-hidden");
+  playApplause();
+  launchCelebration();
+}
+
+function shuffleArray(items) {
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
 }
 
 function playApplause() {

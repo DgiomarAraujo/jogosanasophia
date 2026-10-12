@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quebra-cabeca Surpresa</title>
+  <title>Jogos da Ana Sophia</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <section id="gate" class="gate" aria-labelledby="gate-title">
       <div class="gate-panel">
         <p class="eyebrow">Acesso secreto</p>
-        <h1 id="gate-title">Quebra-cabeca surpresa</h1>
+        <h1 id="gate-title">Jogos da Ana Sophia</h1>
         <p class="intro">Digite a senha combinada para abrir o jogo.</p>
         <form id="passwordForm" class="password-form">
           <label for="passwordInput">Senha</label>
@@ -28,14 +28,38 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Missao especial</p>
-          <h1 id="game-title">Monte a foto para liberar a surpresa</h1>
+          <h1 id="game-title">Escolha um jogo para liberar a surpresa</h1>
         </div>
         <button id="resetButton" class="icon-button" type="button" aria-label="Embaralhar de novo" title="Embaralhar de novo">↻</button>
       </header>
 
+      <nav class="game-tabs" aria-label="Escolha do jogo">
+        <button class="tab-button active" type="button" data-game-tab="slide">Quebra-cabeca</button>
+        <button class="tab-button" type="button" data-game-tab="drag">Arrastar pecas</button>
+        <button class="tab-button" type="button" data-game-tab="crossword">Palavras cruzadas</button>
+      </nav>
+
       <div class="layout">
-        <section class="puzzle-area" aria-label="Area do quebra-cabeca">
-          <canvas id="puzzle" width="720" height="720"></canvas>
+        <section class="play-area" aria-label="Area dos jogos">
+          <div id="slideGame" class="game-view active">
+            <canvas id="puzzle" width="720" height="720"></canvas>
+          </div>
+
+          <div id="dragGame" class="game-view">
+            <div id="dragBoard" class="drag-board" aria-label="Quebra-cabeca de arrastar"></div>
+          </div>
+
+          <div id="crosswordGame" class="game-view">
+            <div id="crosswordBoard" class="crossword-board" aria-label="Palavras cruzadas"></div>
+            <div class="clues">
+              <h2>Pistas</h2>
+              <p><strong>1.</strong> Nome da nossa campea.</p>
+              <p><strong>2.</strong> Ajuda a realizar sonhos.</p>
+              <p><strong>3.</strong> Quem esta sempre junto.</p>
+              <p><strong>4.</strong> O que aparece quando vence.</p>
+            </div>
+          </div>
+
           <div id="completeBanner" class="complete-banner is-hidden">
             <strong>Parabens!</strong>
             <span>Parabens Ana Sophia, estudar e o caminho mais certo para realizar todos os seus sonhos. Conte sempre comigo. Papai Dgiomar.</span>
@@ -63,13 +87,13 @@
 
           <h2>Tarefas</h2>
           <ul class="tasks">
-            <li id="taskFinish"><span></span> Montar a foto</li>
+            <li id="taskFinish"><span></span> Completar um jogo</li>
             <li id="taskMoves"><span></span> Terminar com ate 80 movimentos</li>
-            <li id="taskReplay"><span></span> Jogar uma segunda rodada</li>
+            <li id="taskReplay"><span></span> Completar dois jogos</li>
           </ul>
 
           <button id="hintButton" type="button" class="secondary-button">Ver foto por 3 segundos</button>
-          <p class="small-note">Dica: clique em uma peca ao lado do espaco vazio para mover.</p>
+          <p id="gameTip" class="small-note">Dica: clique em uma peca ao lado do espaco vazio para mover.</p>
         </aside>
       </div>
     </section>
