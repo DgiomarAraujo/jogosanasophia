@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quebra-cabeca Surpresa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section id="gate" class="gate" aria-labelledby="gate-title">
+      <div class="gate-panel">
+        <p class="eyebrow">Acesso secreto</p>
+        <h1 id="gate-title">Quebra-cabeca surpresa</h1>
+        <p class="intro">Digite a senha combinada para abrir o jogo.</p>
+        <form id="passwordForm" class="password-form">
+          <label for="passwordInput">Senha</label>
+          <div class="password-row">
+            <input id="passwordInput" type="password" autocomplete="off" placeholder="Digite aqui">
+            <button type="submit">Entrar</button>
+          </div>
+          <p id="passwordMessage" class="message" role="status"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="game" class="game is-hidden" aria-labelledby="game-title">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Missao especial</p>
+          <h1 id="game-title">Monte a foto para liberar a surpresa</h1>
+        </div>
+        <button id="resetButton" class="icon-button" type="button" aria-label="Embaralhar de novo" title="Embaralhar de novo">↻</button>
+      </header>
+
+      <div class="layout">
+        <section class="puzzle-area" aria-label="Area do quebra-cabeca">
+          <canvas id="puzzle" width="720" height="720"></canvas>
+          <div id="completeBanner" class="complete-banner is-hidden">
+            <strong>Parabens!</strong>
+            <span>Parabens Ana Sophia, estudar e o caminho mais certo para realizar todos os seus sonhos. Conte sempre comigo. Papai Dgiomar.</span>
+          </div>
+        </section>
+
+        <aside class="mission-panel" aria-label="Tarefas">
+          <div class="stat-grid">
+            <div>
+              <span>Movimentos</span>
+              <strong id="moves">0</strong>
+            </div>
+            <div>
+              <span>Nivel</span>
+              <strong id="levelText">Facil</strong>
+            </div>
+          </div>
+
+          <label class="select-label" for="levelSelect">Nivel do desafio</label>
+          <select id="levelSelect">
+            <option value="3">Facil - 3 x 3</option>
+            <option value="4">Medio - 4 x 4</option>
+            <option value="5">Dificil - 5 x 5</option>
+          </select>
+
+          <h2>Tarefas</h2>
+          <ul class="tasks">
+            <li id="taskFinish"><span></span> Montar a foto</li>
+            <li id="taskMoves"><span></span> Terminar com ate 80 movimentos</li>
+            <li id="taskReplay"><span></span> Jogar uma segunda rodada</li>
+          </ul>
+
+          <button id="hintButton" type="button" class="secondary-button">Ver foto por 3 segundos</button>
+          <p class="small-note">Dica: clique em uma peca ao lado do espaco vazio para mover.</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <canvas id="celebration" class="celebration" aria-hidden="true"></canvas>
+  <script src="script.js"></script>
+</body>
+</html>
